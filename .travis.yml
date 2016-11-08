@@ -9,6 +9,7 @@ before_install:
   - sudo apt-get update
   - sudo apt-get install libcurl4-openssl-dev libjson0-dev
   - wget https://dl.influxdata.com/influxdb/releases/influxdb_1.0.2_amd64.deb
+  - ls -la
   - sudo useradd influxdb
   - sudo dpkg -i influxdb_1.0.2_amd64.deb
   - travis_retry sudo service influxdb restart
