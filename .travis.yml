@@ -1,0 +1,7 @@
+language: python
+
+os:
+  - linux
+
+script:
+  - python -m py_compile server.py
