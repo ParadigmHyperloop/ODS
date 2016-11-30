@@ -1,6 +1,6 @@
 # The OpenLoop Telemetry Protocol (Version 2)
 
-_version 1 of the protocol is a proof of concept, ultra-minimal protocol_
+_version 1 of the protocol is a proof of concept, ultra-minimal protocol.  Version 2 implements a leaner interface_
 
 # DRAFT
 
@@ -90,16 +90,37 @@ This format will change to be more compressed
 * The telemetry point is assumed to be transmitted in sequential order
 * The telemetry point is composed of 3 fields, a timestamp, a name and a value
 
-| X      | Header | Timestamp         | Name    | Value | Pad |
---------------------------------------------------------------|
-| Bits   | 8      | 1-64              | 16      | 0-64  | 0-7 |
-
+|        | Header | Timestamp         | Name    | Value | Pad |
+|--------|--------|-------------------|---------|-------|-----|
+| *Bits* | 8      | 1-64              | 16      | 0-64  | 0-7 |
+| Endian | NET    | NET               | NET     | NET   | NET |
 
 The header is used to determine the size and mode of the timestamp field
 
+The Pad is used to align the packet data to 8 bit bytes.
+
 The length of the value field is determined by the Name field.  A pre-determined
-set of Name -> Value length mappings will be stored on the ODS server and on the
-Controller.  Likewise, a mapping of Name -> Human Readable Name will be stored to
+set of `Name -> Value` length mappings will be stored on the ODS server and on the
+Controller.  Likewise, a mapping of `Name -> Human Readable Name` will be stored to
 map the integer names to their string equivalents
+
+### Header Format
+
+The header is 8 bits, or 1 byte. The most signifigant bit is used to denote the type
+of packet this is, and might then signify a change in interpretter to the standard 
+HTTP header parser much like HTTP chunked encoding signifies the beginning of footers
+with a chunk length of 0. If the MSB is 1 then the lower 7 bits interpreted as an 
+integer. Representing the length of the timestamp field (0-64 bits)
+
+For example:
+
+| Header     | Mode | Timestamp Length  |
+|------------|------|-------------------|
+| `10000000` | HEAD | N/A               |
+| `00000000` | DATA | 0                 |
+| `00000001` | DATA | 1                 |
+| `01000000` | DATA | 64                |
+| `00111111` | DATA | 63                |
+| `00000011` | DATA | 3                 |
 
 _To be continued_
