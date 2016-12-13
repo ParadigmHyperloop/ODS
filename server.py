@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
 ##
 # Copyright (c) OpenLoop, 2016
 #
@@ -20,6 +20,7 @@ from datetime import datetime
 import logging
 import SocketServer
 import argparse
+import threading
 from influxdb import InfluxDBClient
 
 BASE_PATH = '.'
@@ -28,6 +29,69 @@ INFLUX_PORT = 8086
 INFLUX_USER = 'root'
 INFLUX_PASS = 'root'
 INFLUX_NAME = 'example'
+
+SPACEX_HOST = 'localhost'
+SPACEX_PORT = 7776
+
+
+class SpaceXPacket:
+    def __init__(self, team_id, status=None, position=None, velocity=None,
+                 acceleration=None, battery_voltage=None,
+                 battery_current=None, battery_temperature=None,
+                 pod_temperature=None, stripe_count=None):
+        self.team_id = team_id
+        self.status = status
+        self.position = position
+        self.velocity = velocity
+        self.acceleration = acceleration
+        self.battery_voltage = battery_voltage
+        self.battery_current = battery_current
+        self.battery_temperature = battery_temperature
+        self.pod_temperature = pod_temperature
+        self.stripe_count = stripe_count
+
+
+class SpaceXConnector:
+    pass
+
+
+class ODSDataHandler:
+    def __init__(self):
+        self.influx = InfluxDBClient(INFLUX_HOST, INFLUX_PORT, INFLUX_USER,
+                                     INFLUX_PASS, INFLUX_NAME)
+
+        self.influx.create_database(INFLUX_NAME)
+
+    def handle(self, data):
+        for name, value in data.items():
+            measurement = [
+                {
+                    "measurement": name,
+                    "tags": {},
+                    "time":  datetime.utcnow().isoformat() + "Z",
+                    "fields": {
+                        "value": value
+                    }
+                }
+            ]
+
+            self.influx.write_points(measurement)
+
+
+class FIFOReader:
+    def __init__(self, filename, handler):
+        self.filename = filename
+        self.handler = handler
+
+    def start(self):
+        with open(self.filename, 'r') as f:
+            for line in f:
+                data = {}
+
+                for i, v in enumerate(line.split()):
+                    data["raw_%d" % i] = float(v)
+
+                self.handler.handle(data)
 
 
 class LoggingHandler(SocketServer.StreamRequestHandler):
@@ -39,16 +103,14 @@ class LoggingHandler(SocketServer.StreamRequestHandler):
     client.
     """
 
+    def send_spacex(self):
+        pass
+
     def handle(self):
         startTime = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
 
         log_fname = os.path.join(BASE_PATH, "logging" + startTime + ".csv")
         data_fname = os.path.join(BASE_PATH, "data" + startTime + ".csv")
-
-        self.influx = InfluxDBClient(INFLUX_HOST, INFLUX_PORT, INFLUX_USER,
-                                     INFLUX_PASS, INFLUX_NAME)
-
-        self.influx.create_database(INFLUX_NAME)
 
         self.log_file = open(log_fname, 'w+')
         self.data_file = open(data_fname, 'w+')
@@ -98,18 +160,7 @@ class LoggingHandler(SocketServer.StreamRequestHandler):
         except ValueError:
             return "ERROR: Bad Value '{}'".format(value)
 
-        measurement = [
-            {
-                "measurement": name,
-                "tags": {},
-                "time":  datetime.utcnow().isoformat() + "Z",
-                "fields": {
-                    "value": value
-                }
-            }
-        ]
-
-        self.influx.write_points(measurement)
+        self.server.data_handler.handle({name: value})
 
         return "OK: ({},{})".format(name, value)
 
@@ -120,6 +171,12 @@ class LoggingHandler(SocketServer.StreamRequestHandler):
 
     def valid(self, s):
         return len(s) >= 4 and s[0:3] == "POD" and isPositiveInt(s[3])
+
+
+class ODSTCPServer(SocketServer.TCPServer):
+    def __init__(self, addr, handler, data_handler):
+        self.data_handler = data_handler
+        super().__init__(addr, handler)
 
 
 def isPositiveInt(s):
@@ -175,6 +232,12 @@ if "__main__" == __name__:
     INFLUX_NAME = args.influx_name
 
     print("Starting TCP Server on 0.0.0.0:{}".format(args.port))
-    server = SocketServer.TCPServer(("0.0.0.0", args.port), LoggingHandler)
 
-    server.serve_forever()
+    data_handler = ODSDataHandler()
+
+    server = ODSTCPServer(("0.0.0.0", args.port), LoggingHandler, data_handler)
+
+    threading.Thread(start=server.serve_forever).start()
+
+    fifor = FIFOReader(filename='./OpenLoopRaw.fifo', handler=data_handler)
+    fifor.start()
