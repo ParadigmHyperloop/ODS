@@ -18,20 +18,13 @@
 import os
 from datetime import datetime
 import logging
-import SocketServer
+import socketserver
 import argparse
 import threading
+import time
 from influxdb import InfluxDBClient
 
 BASE_PATH = '.'
-INFLUX_HOST = 'localhost'
-INFLUX_PORT = 8086
-INFLUX_USER = 'root'
-INFLUX_PASS = 'root'
-INFLUX_NAME = 'example'
-
-SPACEX_HOST = 'localhost'
-SPACEX_PORT = 7776
 
 
 class SpaceXPacket:
@@ -51,50 +44,49 @@ class SpaceXPacket:
         self.stripe_count = stripe_count
 
 
-class SpaceXConnector:
-    pass
-
-
 class ODSDataHandler:
-    def __init__(self):
-        self.influx = InfluxDBClient(INFLUX_HOST, INFLUX_PORT, INFLUX_USER,
-                                     INFLUX_PASS, INFLUX_NAME)
-
-        self.influx.create_database(INFLUX_NAME)
+    def __init__(self, team_id, spacex_addr, influx, name='default'):
+        self.influx = influx
+        self.spacex_addr = spacex_addr
+        self.spacex_packet = SpaceXPacket(team_id)
 
     def handle(self, data):
-        for name, value in data.items():
-            measurement = [
-                {
+        measurements = []
+        for name, value in list(data.items()):
+            measurements.append({
                     "measurement": name,
                     "tags": {},
                     "time":  datetime.utcnow().isoformat() + "Z",
-                    "fields": {
-                        "value": value
-                    }
-                }
-            ]
-
-            self.influx.write_points(measurement)
+                    "fields": {"value": value}})
+        self.influx.write_points(measurements)
 
 
-class FIFOReader:
+
+
+class RawReader:
     def __init__(self, filename, handler):
         self.filename = filename
         self.handler = handler
 
     def start(self):
-        with open(self.filename, 'r') as f:
-            for line in f:
-                data = {}
+        while True:
+            try:
+                with open(self.filename, 'r') as f:
+                    for line in f:
+                        logging.info("FIFO Line: %s" % line)
 
-                for i, v in enumerate(line.split()):
-                    data["raw_%d" % i] = float(v)
+                        data = {}
 
-                self.handler.handle(data)
+                        for i, v in enumerate(line.split()):
+                            data["raw_%d" % i] = float(v)
+
+                        self.handler.handle(data)
+            except OSError as e:
+                logging.exception(e)
+                time.sleep(5)
 
 
-class LoggingHandler(SocketServer.StreamRequestHandler):
+class LoggingHandler(socketserver.StreamRequestHandler):
     """
     The request handler class for our server.
 
@@ -109,8 +101,8 @@ class LoggingHandler(SocketServer.StreamRequestHandler):
     def handle(self):
         startTime = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
 
-        log_fname = os.path.join(BASE_PATH, "logging" + startTime + ".csv")
-        data_fname = os.path.join(BASE_PATH, "data" + startTime + ".csv")
+        log_fname = os.path.join(self.server.base_path, "logging" + startTime + ".csv")
+        data_fname = os.path.join(self.server.base_path, "data" + startTime + ".csv")
 
         self.log_file = open(log_fname, 'w+')
         self.data_file = open(data_fname, 'w+')
@@ -173,9 +165,10 @@ class LoggingHandler(SocketServer.StreamRequestHandler):
         return len(s) >= 4 and s[0:3] == "POD" and isPositiveInt(s[3])
 
 
-class ODSTCPServer(SocketServer.TCPServer):
-    def __init__(self, addr, handler, data_handler):
+class ODSTCPServer(socketserver.TCPServer):
+    def __init__(self, addr, handler, base_path, data_handler):
         self.data_handler = data_handler
+        self.base_path = base_path
         super().__init__(addr, handler)
 
 
@@ -200,23 +193,33 @@ if "__main__" == __name__:
     parser.add_argument("-p", "--port", type=int, default=7778,
                         help="Server listen port")
 
-    parser.add_argument("-d", "--directory", default=BASE_PATH,
+    parser.add_argument("-d", "--directory", default='.',
                         help="directory to store raw log and data files in")
+    parser.add_argument("-s", "--serial", default=None,
+                        help="Serial desive that spits out raw data")
+
+    # Used for the SpaceX data stream format
+    parser.add_argument("--spacex-host", default=None,
+                        help="The hostname/ip of the SpaceX data reciever")
+    parser.add_argument("--spacex-port", default=0, type=int,
+                        help="The SpaceX data reciever port")
+    parser.add_argument("--team-id", default=0, type=int,
+                        help="The team id assigned by spacex")
 
     # Influx arguments
-    parser.add_argument("--influx-host", default=INFLUX_HOST,
+    parser.add_argument("--influx-host", default='127.0.0.1',
                         help="Influxdb hostname")
 
-    parser.add_argument("--influx-port", default=INFLUX_PORT,
+    parser.add_argument("--influx-port", default=8086, type=int,
                         help="Influxdb port")
 
-    parser.add_argument("--influx-user", default=INFLUX_USER,
+    parser.add_argument("--influx-user", default='root',
                         help="Influxdb username")
 
-    parser.add_argument("--influx-pass", default=INFLUX_PASS,
+    parser.add_argument("--influx-pass", default='root',
                         help="Influxdb password")
 
-    parser.add_argument("--influx-name", default=INFLUX_NAME,
+    parser.add_argument("--influx-name", default='example',
                         help="Influxdb database name")
 
     args = parser.parse_args()
@@ -224,20 +227,27 @@ if "__main__" == __name__:
     if args.verbose:
         logging.basicConfig(level=logging.DEBUG)
 
-    BASE_PATH = args.directory
-    INFLUX_HOST = args.influx_host
-    INFLUX_PORT = args.influx_port
-    INFLUX_USER = args.influx_user
-    INFLUX_PASS = args.influx_pass
-    INFLUX_NAME = args.influx_name
+    # Create connection to influx database
+    influx = InfluxDBClient(args.influx_host, args.influx_port,
+                            args.influx_user, args.influx_pass,
+                            args.influx_name)
 
-    print("Starting TCP Server on 0.0.0.0:{}".format(args.port))
+    influx.create_database(args.influx_name)
 
-    data_handler = ODSDataHandler()
+    # Setup the data handler, tell it about the spacex server
+    spacex_addr = (args.spacex_host, args.spacex_port)
+    data_handler = ODSDataHandler(args.team_id, spacex_addr, influx)
 
-    server = ODSTCPServer(("0.0.0.0", args.port), LoggingHandler, data_handler)
+    # Startup the main main TCP reciever
+    print(("Starting ODS Server on 0.0.0.0:{}".format(args.port)))
+    server = ODSTCPServer(("0.0.0.0", args.port), LoggingHandler,
+                          args.directory, data_handler)
 
-    threading.Thread(start=server.serve_forever).start()
+    t = threading.Thread(target=server.serve_forever)
+    t.start()
 
-    fifor = FIFOReader(filename='./OpenLoopRaw.fifo', handler=data_handler)
-    fifor.start()
+    if args.serial:
+        logging.info("Starting raw serial reader on: %s" % args.serial)
+        RawReader(filename=args.serial, handler=data_handler).start()
+
+    t.join()
