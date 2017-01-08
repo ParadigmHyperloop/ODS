@@ -61,8 +61,6 @@ class ODSDataHandler:
         self.influx.write_points(measurements)
 
 
-
-
 class RawReader:
     def __init__(self, filename, handler):
         self.filename = filename
@@ -111,7 +109,7 @@ class LoggingHandler(socketserver.StreamRequestHandler):
         # we can now use e.g. readline() instead of raw recv() calls
         while True:
 
-            self.data = self.rfile.readline()
+            self.data = self.rfile.readline().decode('utf-8')
 
             # if disconnected, then break
             if not self.data:
@@ -138,9 +136,9 @@ class LoggingHandler(socketserver.StreamRequestHandler):
             # Likewise, self.wfile is a file-like object used to write back
             # to the client
             if response is None:
-                self.wfile.write("FAIL: " + self.data + "\n")
+                self.wfile.write(("FAIL: " + self.data + "\n").encode('utf-8'))
             else:
-                self.wfile.write(response + "\n")
+                self.wfile.write((response + "\n").encode('utf-8'))
 
     def handle_data(self, msg):
         logging.info("[DATA] {}".format(msg))
