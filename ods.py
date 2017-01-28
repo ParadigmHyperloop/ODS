@@ -55,10 +55,10 @@ class SpaceXPacket:
 
 
 class ODSServer:
-    def __init__(self, addrport, team_id, spacexaddr, influx):
+    def __init__(self, addrport, team_id, spacex_addr, influx):
         self.addrport = addrport
         self.influx = influx
-        self.spacexaddr = spacexaddr
+        self.spacex_addr = spacex_addr
         self.team_id = team_id
         self.spacex_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.last_spacex_packet = datetime.now()
@@ -191,9 +191,8 @@ class ODSServer:
                     self.state = results
 
                     if datetime.now() - self.last_spacex_packet > SPACEX_INTERVAL:
-                        print ("SpaceX Telemetry Disabled" )
-                        #pkt = self.make_spacex_packet()
-                        #self.send_to_spacex(pkt)
+                        pkt = self.make_spacex_packet()
+                        self.send_to_spacex(pkt)
 
                 elif length == 0:
                     break
@@ -212,10 +211,9 @@ class ODSServer:
 
     def send_to_spacex(self, pkt):
         """Send to SpaceX over UDP"""
-        # self.spacex_sock.sendto(pkt.to_bytes(), self.spacex_addr)
+        self.spacex_sock.sendto(pkt.to_bytes(), self.spacex_addr)
 
     def make_spacex_packet(self):
-        return
         state_mapper = [
             1,  # POST = 0,
             1,  # Boot = 1,
@@ -243,7 +241,7 @@ class ODSServer:
             battery_current=int(self.state['current_0']) * 1000,
             battery_temperature=int(self.state['power_thermo_0']) * 10,
             pod_temperature=int(self.state['frame_thermo']) * 10,
-            stripe_count=0
+            stripe_count=int(self.state['stripe_count'])
         )
 
 
