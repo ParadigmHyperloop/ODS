@@ -211,7 +211,8 @@ class ODSServer:
 
     def send_to_spacex(self, pkt):
         """Send to SpaceX over UDP"""
-        self.spacex_sock.sendto(pkt.to_bytes(), self.spacex_addr)
+        if self.spacex_sock:
+            self.spacex_sock.sendto(pkt.to_bytes(), self.spacex_addr)
 
     def make_spacex_packet(self):
         state_mapper = [
@@ -256,7 +257,7 @@ def main():
     parser.add_argument("-d", "--directory", default='.',
                         help="directory to store raw log and data files in")
     parser.add_argument("-s", "--serial", default=None,
-                        help="Serial desive that spits out raw data")
+                        help="Serial device that spits out raw data")
 
     # Used for the SpaceX data stream format
     parser.add_argument("--spacex-host", default=None,
@@ -299,7 +300,7 @@ def main():
     print(("Starting ODS Server on 0.0.0.0:{}".format(args.port)))
     server = ODSServer(("", args.port), args.team_id, spacex_addr, influx)
 
-    # Startup the main main reciever
+    # Startup the main reciever
     server.run()
 
 
