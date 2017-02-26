@@ -66,13 +66,14 @@ use the following arguments to tell the ODS server where you have InfluxDB
 running so that it can dump the incoming telemetry data.
 
 ```
-$ ./server.py --help
-usage: server.py [-h] [-v] [-p PORT] [-d DIRECTORY]
-                 [--influx-host INFLUX_HOST] [--influx-port INFLUX_PORT]
-                 [--influx-user INFLUX_USER] [--influx-pass INFLUX_PASS]
-                 [--influx-name INFLUX_NAME]
+$ ./ods.py --help
+usage: ods.py [-h] [-v] [-p PORT] [-d DIRECTORY] [-s SERIAL]
+              [--spacex-host SPACEX_HOST] [--spacex-port SPACEX_PORT]
+              [--team-id TEAM_ID] [--influx-host INFLUX_HOST]
+              [--influx-port INFLUX_PORT] [--influx-user INFLUX_USER]
+              [--influx-pass INFLUX_PASS] [--influx-name INFLUX_NAME]
 
-OpenLoop Data Shuttle
+Openloop Data Shuttle
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -80,6 +81,13 @@ optional arguments:
   -p PORT, --port PORT  Server listen port
   -d DIRECTORY, --directory DIRECTORY
                         directory to store raw log and data files in
+  -s SERIAL, --serial SERIAL
+                        Serial device that spits out raw data
+  --spacex-host SPACEX_HOST
+                        The hostname/ip of the SpaceX data reciever
+  --spacex-port SPACEX_PORT
+                        The SpaceX data reciever port
+  --team-id TEAM_ID     The team id assigned by spacex
   --influx-host INFLUX_HOST
                         Influxdb hostname
   --influx-port INFLUX_PORT
