@@ -25,6 +25,14 @@ LAT_FIL_1_MASK = 0x8000
 
 SPACEX_INTERVAL = timedelta(seconds=0.3)
 
+class SpaceXStatus:
+    FAULT = 0
+    IDLE = 1
+    READY = 2
+    PUSHING = 3
+    COASTING = 4
+    BRAKING = 5
+
 
 class SpaceXPacket:
     def __init__(self, team_id, status=None, position=None, velocity=None,
@@ -211,30 +219,34 @@ class ODSServer:
 
     def send_to_spacex(self, pkt):
         """Send to SpaceX over UDP"""
-        if self.spacex_sock:
+        if self.spacex_sock and self.spacex_addr:
             self.spacex_sock.sendto(pkt.to_bytes(), self.spacex_addr)
 
     def make_spacex_packet(self):
         state_mapper = [
-            1,  # POST = 0,
-            1,  # Boot = 1,
-            1,  # LPFill = 2,
-            1,  # HPFill = 3,
-            1,  # Load = 4,
-            1,  # Standby = 5,
-            2,  # Armed = 6,
-            3,  # Pushing = 7,
-            4,  # Coasting = 8,
-            5,  # Braking = 9,
-            1,  # Vent = 10,
-            1,  # Retrieval = 11,
-            0,  # Emergency = 12,
-            1   # Shutdown = 13,
+            SpaceXStatus.IDLE,     # POST = 0,
+            SpaceXStatus.IDLE,     # Boot = 1,
+            SpaceXStatus.IDLE,     # LPFill = 2,
+            SpaceXStatus.IDLE,     # HPFill = 3,
+            SpaceXStatus.IDLE,     # Load = 4,
+            SpaceXStatus.IDLE,     # Standby = 5,
+            SpaceXStatus.READY,    # Armed = 6,
+            SpaceXStatus.PUSHING,  # Pushing = 7,
+            SpaceXStatus.COASTING, # Coasting = 8,
+            SpaceXStatus.BRAKING,  # Braking = 9,
+            SpaceXStatus.IDLE,     # Vent = 10,
+            SpaceXStatus.IDLE,     # Retrieval = 11,
+            SpaceXStatus.FAULT,    # Emergency = 12,
+            SpaceXStatus.IDLE      # Shutdown = 13,
         ]
+
+        spacex_status = 0
+        if self.state['state'] in state_mapper:
+            spacex_status = state_mapper[self.state['state']]
 
         return SpaceXPacket(
             team_id=self.team_id,
-            status=state_mapper[self.state['state']],
+            status=spacex_status,
             position=int(self.state['position_x']) * 100,
             velocity=int(self.state['velocity_x']) * 100,
             acceleration=int(self.state['acceleration_x']) * 100,
@@ -295,9 +307,13 @@ def main():
 
     influx.create_database(args.influx_name)
 
+    spacex_addr = None
     # Setup the data handler, tell it about the spacex server
-    spacex_addr = (args.spacex_host, args.spacex_port)
-    print(("Starting ODS Server on 0.0.0.0:{}".format(args.port)))
+    if args.spacex_host:
+        print(("Forwarding Telemetry to %s:%d" % (args.spacex_host, args.spacex_port)))
+        spacex_addr = (args.spacex_host, args.spacex_port)
+
+    print(("Starting ODS Server on 0.0.0.0:%d" % args.port))
     server = ODSServer(("", args.port), args.team_id, spacex_addr, influx)
 
     # Startup the main reciever
@@ -305,4 +321,11 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    while True:
+        try:
+            main()
+        except KeyboardInterupt:
+            break
+        except Exception as e:
+            print(e)
+            print("*** AUTOMATIC SERVER RESTART ***")
