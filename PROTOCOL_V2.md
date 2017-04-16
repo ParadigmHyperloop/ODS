@@ -2,9 +2,12 @@
 
 _version 1 of the protocol is a proof of concept, ultra-minimal protocol.  Version 2 implements a leaner interface_
 
-# DRAFT
+# DISCONTINUED
 
-This document is a draft
+This version of the protocol was never implemented. The requirement for ensured
+packet delivery for telemetry was unnessesary and now the telemetry stream is
+conducted over UDP with packets conforming to the current version of a 
+`struct telemetry_packet` (aka `telemetry_packet_t`) in `ParadigmHyperloop/hyperloop-core/core`
 
 # Overview
 
