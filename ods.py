@@ -3,8 +3,10 @@ import socket
 import struct
 import logging
 import argparse
+import threading
 from datetime import datetime, timedelta
 from influxdb import InfluxDBClient
+from raw_reader import RawReader
 
 SKATE_0_MASK = 0x0001
 SKATE_1_MASK = 0x0002
@@ -300,6 +302,11 @@ def main():
     if args.verbose:
         logging.basicConfig(level=logging.DEBUG)
 
+    if args.serial:
+        print("Starting raw serial reader on: %s" % args.serial)
+        raw = RawReader(filename=args.serial)
+        threading.Thread(target=raw.run_safe).start()
+
     # Create connection to influx database
     influx = InfluxDBClient(args.influx_host, args.influx_port,
                             args.influx_user, args.influx_pass,
@@ -324,7 +331,7 @@ if __name__ == "__main__":
     while True:
         try:
             main()
-        except KeyboardInterupt:
+        except KeyboardInterrupt as e:
             break
         except Exception as e:
             print(e)
