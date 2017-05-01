@@ -8,6 +8,8 @@ from datetime import datetime, timedelta
 from influxdb import InfluxDBClient
 from raw_reader import RawReader
 
+PACKET_LENGTH = 240
+
 SKATE_0_MASK = 0x0001
 SKATE_1_MASK = 0x0002
 SKATE_3_MASK = 0x0004
@@ -178,36 +180,28 @@ class ODSServer:
         return params
 
     def run(self):
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
         sock.bind(self.addrport)
-        sock.listen(1)
 
         while True:
-            conn, addr = sock.accept()
-            print("New Connection from {}".format(addr))
+            message = sock.recv(PACKET_LENGTH)
+            length = len(message)
+            if length == PACKET_LENGTH:
+                results = self.parse_message(message)
+                print(results)
+                self.store_metrics(results)
 
-            while True:
-                message = conn.recv(512)
-                length = len(message)
-                if length == 240:
-                    results = self.parse_message(message)
-                    print(results)
-                    self.store_metrics(results)
+                self.state = results
 
-                    self.state = results
+                if datetime.now() - self.last_spacex_packet > SPACEX_INTERVAL:
+                    pkt = self.make_spacex_packet()
+                    self.send_to_spacex(pkt)
 
-                    if datetime.now() - self.last_spacex_packet > SPACEX_INTERVAL:
-                        pkt = self.make_spacex_packet()
-                        self.send_to_spacex(pkt)
-
-                elif length == 0:
-                    break
-                else:
-                    print("Incorrect message length: %d" % length)
+            elif length == 0:
+                break
+            else:
+                print("Incorrect message length: %d" % length)
 
     def store_metrics(self, data):
         measurements = []
@@ -320,7 +314,7 @@ def main():
         print(("Forwarding Telemetry to %s:%d" % (args.spacex_host, args.spacex_port)))
         spacex_addr = (args.spacex_host, args.spacex_port)
 
-    print(("Starting ODS Server on 0.0.0.0:%d" % args.port))
+    print(("Starting ODS Server on udp://0.0.0.0:%d" % args.port))
     server = ODSServer(("", args.port), args.team_id, spacex_addr, influx)
 
     # Startup the main reciever
