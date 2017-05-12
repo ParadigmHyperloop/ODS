@@ -12,7 +12,7 @@ PACKET_LENGTH = 240
 
 SKATE_0_MASK = 0x0001
 SKATE_1_MASK = 0x0002
-SKATE_3_MASK = 0x0004
+SKATE_2_MASK = 0x0004
 CLAMP_ENG_0_MASK = 0x0008
 CLAMP_REL_0_MASK = 0x0010
 CLAMP_ENG_1_MASK = 0x0020
@@ -105,7 +105,7 @@ class ODSServer:
             "solenoid_mask": solenoid_mask,
             "SOL_SKATE_0": 1 if (solenoid_mask & SKATE_0_MASK) else 0,
             "SOL_SKATE_1": 1 if (solenoid_mask & SKATE_1_MASK) else 0,
-            "SOL_SKATE_3": 1 if (solenoid_mask & SKATE_3_MASK) else 0,
+            "SOL_SKATE_2": 1 if (solenoid_mask & SKATE_2_MASK) else 0,
             "SOL_CLAMP_ENG_0": 1 if (solenoid_mask & CLAMP_ENG_0_MASK) else 0,
             "SOL_CLAMP_REL_0": 1 if (solenoid_mask & CLAMP_REL_0_MASK) else 0,
             "SOL_CLAMP_ENG_1": 1 if (solenoid_mask & CLAMP_ENG_1_MASK) else 0,
