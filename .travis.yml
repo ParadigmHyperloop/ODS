@@ -19,5 +19,5 @@ before_script:
   - pip install -r requirements.txt
 
 script:
-  - python -m py_compile ods.py
+  - python -m py_compile run.py
   - ./tests/integration.sh
