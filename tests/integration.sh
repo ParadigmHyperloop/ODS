@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-SERVER="python run.py"
+SERVER="./run.py"
 SERVER_OUT="server.out"
 SERVER_ERR="server.err"
 PORT=7778
