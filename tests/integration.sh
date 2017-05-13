@@ -1,7 +1,7 @@
 #!/bin/bash
-set -v
 
-SERVER="./server.py"
+
+SERVER="python ods.py"
 SERVER_OUT="server.out"
 SERVER_ERR="server.err"
 PORT=7778
@@ -9,7 +9,7 @@ PORT=7778
 FIFO="./data-fifo"
 N_ENTRIES=1000
 MEASUREMENTS="test test2"
-TEST_DATA_FILE="./test-data.txt"
+TEST_DATA_FILE="./tests/assets/hyperloop-telemetry.log.bin"
 
 # start the server in the background
 # ( $SERVER -p $PORT > $SERVER_OUT 2> $SERVER_ERR )&
@@ -26,17 +26,8 @@ if [ $? -eq 0 ]; then
   }
   trap cleanup EXIT
 
-  rm $TEST_DATA_FILE
-  # generate some random data
-  for i in $(seq 1 $N_ENTRIES); do
-    t=2
-    for m in $MEASUREMENTS; do
-      echo "POD$t$m $RANDOM" >> $TEST_DATA_FILE
-    done
-  done
-
   # Run with the test data
-  cat $TEST_DATA_FILE | nc localhost $PORT
+  cat $TEST_DATA_FILE | nc -u -4 -w 1 localhost $PORT
 
   echo "=== Test Complete ==="
 else
