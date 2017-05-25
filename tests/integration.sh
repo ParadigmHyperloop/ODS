@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-SERVER="./run.py"
+SERVER="python3 ./ods.py"
 SERVER_OUT="server.out"
 SERVER_ERR="server.err"
 PORT=7778

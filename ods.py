@@ -8,8 +8,8 @@ import time
 from datetime import datetime, timedelta
 from influxdb import InfluxDBClient
 from raw_reader import RawReader
-from ods.http.server import ODSHTTPServer
-from ods.http.handler import ODSHTTPRequestHandler
+from openloop.http.app import set_ods, set_pod, app, WEB_ROOT
+from openloop.pod import Pod
 
 PACKET_LENGTH = 240
 
@@ -57,6 +57,7 @@ class SpaceXPacket:
         self.battery_temperature = battery_temperature
         self.pod_temperature = pod_temperature
         self.stripe_count = stripe_count
+        self.current_sender = None
 
     def to_bytes(self):
         """Convert to bytes"""
@@ -191,11 +192,10 @@ class ODSServer:
         sock.bind(self.addrport)
 
         while True:
-            message = sock.recv(PACKET_LENGTH)
+            message, addr = sock.recvfrom(PACKET_LENGTH)
             length = len(message)
             if length == PACKET_LENGTH:
                 results = self.parse_message(message)
-                print(results)
                 self.store_metrics(results)
 
                 self.state = results
@@ -204,6 +204,7 @@ class ODSServer:
                     pkt = self.make_spacex_packet()
                     self.send_to_spacex(pkt)
 
+                self.current_sender = addr
             elif length == 0:
                 break
             else:
@@ -303,6 +304,9 @@ def main():
     parser.add_argument("--influx-name", default='example',
                         help="Influxdb database name")
 
+    parser.add_argument("--web-root", default='../web/src',
+                        help="Path to the Pod Web Static Files")
+
     args = parser.parse_args()
 
     if args.verbose:
@@ -329,13 +333,22 @@ def main():
 
     print(("Starting ODS Server on udp://0.0.0.0:%d" % args.port))
     server = ODSServer(("", args.port), args.team_id, spacex_addr, influx)
+    set_ods(server)
+
+    pod_addr = ('127.0.0.1', 7779)
+    pod = Pod(pod_addr)
+    set_pod(pod)
+
+    print("Connecting to pod tcp://%s:%d" % pod_addr)
+    pod.connect()
 
     http_addr = (args.http_host, args.http_port)
-    print("Starting HTTP Server on %s:%d" % http_addr)
-    http_server = ODSHTTPServer(http_addr, ODSHTTPRequestHandler, server)
+    print("Starting HTTP Server on tcp://%s:%d" % http_addr)
+
+    WEB_ROOT = args.web_root
 
     t1 = threading.Thread(target=server.run)
-    t2 = threading.Thread(target=http_server.serve_forever)
+    t2 = threading.Thread(target=app.run, args=list(http_addr))
 
     t1.start()
     t2.start()
