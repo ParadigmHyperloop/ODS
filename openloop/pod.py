@@ -92,22 +92,23 @@ class Pod:
         self.timeout_handler = None
 
     def ping(self, _):
-        if self.is_connected():
-            response = self.run("ping", timeout=PING_TIMEOUT)
-            if response is None:
-                if self.timeout_handler is not None:
-                    self.timeout_handler()
-                self.close()
-                self.state = None
-            else:
-                if 'PONG:' in response:
-                    self.state = PodState(response.strip().split(':')[1])
+        response = self.run("ping", timeout=PING_TIMEOUT)
+        if response is None:
+            if self.timeout_handler is not None:
+                self.timeout_handler()
+            self.close()
+            self.state = None
+        else:
+            if 'PONG:' in response:
+                self.state = PodState(response.strip().split(':')[1])
 
     def run(self, cmd, timeout=None):
         if timeout is None:
             timeout = timedelta(seconds=1)
 
         if self.lock.acquire():
+            if not self.is_connected():
+                self.connect()
             self.send(cmd + "\n")
             data = self.recv(timeout=timeout)
             self.lock.release()
@@ -140,10 +141,13 @@ class Pod:
                 data = self.sock.recv(MAX_MESSAGE_SIZE).decode('utf-8')
                 logging.debug("Sending {}".format(data))
                 return data
-            return None
+
         except Exception as e:
             self.close()
             raise e
+
+        self.close()
+        return None
 
     def connect(self):
         try:

@@ -1,0 +1,526 @@
+{
+  "corner_0" : {
+    "name": "Front-Left Height",
+    "description": "The front-left skate height off the subtrack",
+    "unit": "mm",
+    "thresholds": {
+      "danger": [null, 0.0],
+      "warning": [0.0, 1.0],
+      "success": [1.0, 10.0],
+      "danger": [10, null]
+    }
+  },
+  "corner_1" : {
+    "name": "Front-Right Height",
+    "description": "The front-right skate height off the subtrack",
+    "unit": "mm",
+    "thresholds": {
+      "danger": [null, 0.0],
+      "warning": [0.0, 1.0],
+      "success": [1.0, 10.0],
+      "danger": [10, null]
+    }
+  },
+  "corner_2" : {
+    "name": "Rear-Left Height",
+    "description": "The rear-left skate height off the subtrack",
+    "unit": "mm",
+    "thresholds": {
+      "danger": [null, 0.0],
+      "warning": [0.0, 1.0],
+      "success": [1.0, 10.0],
+      "danger": [10, null]
+    }
+  },
+  "corner_3" : {
+    "name": "Rear-Right Height",
+    "description": "The Distance of the rear right skate off the subtrack",
+    "unit": "mm",
+    "thresholds": {
+      "danger": [null, 0.0],
+      "warning": [0.0, 1.0],
+      "success": [1.0, 10.0],
+      "danger": [10, null]
+    }
+  },
+  "wheel_0" : {
+    "name": "Rail Clearance Front",
+    "description": "The Front rail clearance sensor",
+    "unit": "mm",
+    "thresholds": {
+      "danger": [null, 0.0],
+      "warning": [0.0, 1.0],
+      "success": [1.0, 10.0],
+      "danger": [10, null]
+    }
+  },
+  "wheel_1" : {
+    "name": "Rail Clearance Mid",
+    "description": "The Mid rail clearance sensor",
+    "unit": "mm",
+    "thresholds": {
+      "danger": [null, 0.0],
+      "warning": [0.0, 1.0],
+      "success": [1.0, 10.0],
+      "danger": [10, null]
+    }
+  },
+  "wheel_2" : {
+    "name": "Rail Clearance Rear",
+    "description": "The Rear rail clearance sensor",
+    "unit": "mm",
+    "thresholds": {
+      "danger": [null, 0.0],
+      "warning": [0.0, 1.0],
+      "success": [1.0, 10.0],
+      "danger": [10, null]
+    }
+  },
+  "lateral_0" : {
+    "name": "Front lateral distance",
+    "description": "The front lateral distance sensor",
+    "unit": "mm",
+    "thresholds": {
+      "danger": [null, 0.0],
+      "warning": [0.0, 1.0],
+      "success": [1.0, 10.0],
+      "danger": [10, null]
+    }
+  },
+  "lateral_1" : {
+    "name": "Mid lateral distance",
+    "description": "The mid lateral distance sensor",
+    "unit": "mm",
+    "thresholds": {
+      "danger": [null, 0.0],
+      "warning": [0.0, 1.0],
+      "success": [1.0, 10.0],
+      "danger": [10, null]
+    }
+  },
+  "lateral_2" : {
+    "name": "Rear lateral distance",
+    "description": "The rear lateral distance sensor",
+    "unit": "mm",
+    "thresholds": {
+      "danger": [null, 0.0],
+      "warning": [0.0, 1.0],
+      "success": [1.0, 10.0],
+      "danger": [10, null]
+    }
+  },
+  "hp_pressure" : {
+    "name": "HP System Pressure",
+    "description": "The pressure in the HP Manifold",
+    "unit": "psi",
+    "thresholds": {
+      "danger": [null, 0.0],
+      "warning": [0.0, 1.0],
+      "success": [1.0, 10.0],
+      "danger": [10, null]
+    }
+  },
+  "reg_pressure_0" : {
+    "name": "Reg A Pressure",
+    "description": "The pressure in LP Package A",
+    "unit": "psi",
+    "thresholds": {
+      "danger": [null, 0.0],
+      "success": [0.0, 125.0],
+      "warning": [125.0, 135.0],
+      "danger": [135.0, null]
+    }
+  },
+  "reg_pressure_1" : {
+    "name": "Reg B Pressure",
+    "description": "The pressure in LP Package B",
+    "unit": "psi",
+    "thresholds": {
+      "danger": [null, 0.0],
+      "success": [0.0, 125.0],
+      "warning": [125.0, 135.0],
+      "danger": [135.0, null]
+    }
+  },
+  "reg_pressure_2" : {
+    "name": "Reg C Pressure",
+    "description": "The pressure in LP Package C",
+    "unit": "psi",
+    "thresholds": {
+      "danger": [null, 0.0],
+      "success": [0.0, 125.0],
+      "warning": [125.0, 135.0],
+      "danger": [135.0, null]
+    }
+  },
+  "reg_pressure_3" : {
+    "name": "Reg D Pressure",
+    "description": "The pressure in LP Package D",
+    "unit": "psi",
+    "thresholds": {
+      "danger": [null, 0.0],
+      "success": [0.0, 125.0],
+      "warning": [125.0, 135.0],
+      "danger": [135.0, null]
+    }
+  },
+  "clamp_pressure_0" : {
+    "name": "Front Clamp Pressure",
+    "description": "The pressure in the front clamp pistons",
+    "unit": "psi",
+    "thresholds": {
+      "danger": [null, 0.0],
+      "success": [0.0, 125.0],
+      "warning": [125.0, 135.0],
+      "danger": [135.0, null]
+    }
+  },
+  "clamp_pressure_1" : {
+    "name": "Rear Clamp Pressure",
+    "description": "The pressure in the rear clamp pistons",
+    "unit": "psi",
+    "thresholds": {
+      "danger": [null, 0.0],
+      "success": [0.0, 125.0],
+      "warning": [125.0, 135.0],
+      "danger": [135.0, null]
+    }
+  },
+  "skate_pressure_0" : {
+    "name": "Skate C Pressure",
+    "description": "The pressure in the skate C's chamber",
+    "unit": "psi",
+    "thresholds": {
+      "danger": [null, 0.0],
+      "success": [0.0, 2.0],
+      "warning": [2.0, 16.0],
+      "danger": [16.0, null]
+    }
+  },
+  "skate_pressure_1" : {
+    "name": "Skate D Pressure",
+    "description": "skateThe pressure in the skate D's chamber_pressure_1",
+    "unit": "psi",
+    "thresholds": {
+      "danger": [null, 0.0],
+      "success": [0.0, 2.0],
+      "warning": [2.0, 16.0],
+      "danger": [16.0, null]
+    }
+  },
+  "lateral_pressure_0" : {
+    "name": "Front Lateral Control Pressure",
+    "description": "The Pressure in the Front Lateral Control System",
+    "unit": "psi",
+    "thresholds": {
+      "danger": [null, 0.0],
+      "success": [0.0, 75.0],
+      "warning": [75.0, 135.0],
+      "danger": [135.0, null]
+    }
+  },
+  "lateral_pressure_1" : {
+    "name": "Rear Lateral Control Pressure",
+    "description": "The Pressure in the Rear Lateral Control System",
+    "unit": "psi",
+    "thresholds": {
+      "danger": [null, 0.0],
+      "success": [0.0, 75.0],
+      "warning": [75.0, 135.0],
+      "danger": [135.0, null]
+    }
+  },
+  "hp_thermo" : {
+    "name": "HP Fill Air Temp.",
+    "description": "The Line Temperature of the HP Fill Input",
+    "unit": "celcius",
+    "thresholds": {
+      "danger": [null, -10.0],
+      "warning": [-10, 0.0],
+      "success": [0.0, 55.0],
+      "warning": [55.0, 65.0],
+      "danger": [65.0, null]
+    }
+  },
+  "reg_thermo_0" : {
+    "name": "Reg A Air Temp.",
+    "description": "The Line Temperature of Regulator A",
+    "unit": "celcius",
+    "thresholds": {
+      "danger": [null, -10.0],
+      "warning": [-10, 0.0],
+      "success": [0.0, 55.0],
+      "warning": [55.0, 65.0],
+      "danger": [65.0, null]
+    }
+  },
+  "reg_thermo_1" : {
+    "name": "Reg B Air Temp.",
+    "description": "The Line Temperature of Regulator B",
+    "unit": "celcius",
+    "thresholds": {
+      "danger": [null, -10.0],
+      "warning": [-10, 0.0],
+      "success": [0.0, 55.0],
+      "warning": [55.0, 65.0],
+      "danger": [65.0, null]
+    }
+  },
+  "reg_thermo_2" : {
+    "name": "Reg C Air Temp.",
+    "description": "The Line Temperature of Regulator C",
+    "unit": "celcius",
+    "thresholds": {
+      "danger": [null, -10.0],
+      "warning": [-10, 0.0],
+      "success": [0.0, 55.0],
+      "warning": [55.0, 65.0],
+      "danger": [65.0, null]
+    }
+  },
+  "reg_thermo_3" : {
+    "name": "Reg D Air Temp.",
+    "description": "The Line Temperature of Regulator D",
+    "unit": "celcius",
+    "thresholds": {
+      "danger": [null, -10.0],
+      "warning": [-10, 0.0],
+      "success": [0.0, 55.0],
+      "warning": [55.0, 65.0],
+      "danger": [65.0, null]
+    }
+  },
+  "reg_surf_thermo_0" : {
+    "name": "Reg A Surface Temp.",
+    "description": "The Temperature of Regulator A",
+    "unit": "celcius",
+    "thresholds": {
+      "danger": [null, -10.0],
+      "warning": [-10, 0.0],
+      "success": [0.0, 55.0],
+      "warning": [55.0, 65.0],
+      "danger": [65.0, null]
+    }
+  },
+  "reg_surf_thermo_1" : {
+    "name": "Reg B Surface Temp.",
+    "description": "The Temperature of Regulator B",
+    "unit": "celcius",
+    "thresholds": {
+      "danger": [null, -10.0],
+      "warning": [-10, 0.0],
+      "success": [0.0, 55.0],
+      "warning": [55.0, 65.0],
+      "danger": [65.0, null]
+    }
+  },
+  "reg_surf_thermo_2" : {
+    "name": "Reg C Surface Temp.",
+    "description": "The Temperature of Regulator C",
+    "unit": "celcius",
+    "thresholds": {
+      "danger": [null, -10.0],
+      "warning": [-10, 0.0],
+      "success": [0.0, 55.0],
+      "warning": [55.0, 65.0],
+      "danger": [65.0, null]
+    }
+  },
+  "reg_surf_thermo_3" : {
+    "name": "Reg D Surface Temp.",
+    "description": "The Temperature of Regulator D",
+    "unit": "celcius",
+    "thresholds": {
+      "danger": [null, -10.0],
+      "warning": [-10, 0.0],
+      "success": [0.0, 55.0],
+      "warning": [55.0, 65.0],
+      "danger": [65.0, null]
+    }
+  },
+  "power_thermo_0" : {
+    "name": "Pack A Temp.",
+    "description": "The Temperature of Battery Pack A",
+    "unit": "celcius",
+    "thresholds": {
+      "danger": [null, -10.0],
+      "warning": [-10, 0.0],
+      "success": [0.0, 55.0],
+      "warning": [55.0, 65.0],
+      "danger": [65.0, null]
+    }
+  },
+  "power_thermo_1" : {
+    "name": "Pack B Temp.",
+    "description": "The Temperature of Battery Pack B",
+    "unit": "celcius",
+    "thresholds": {
+      "danger": [null, -10.0],
+      "warning": [-10, 0.0],
+      "success": [0.0, 55.0],
+      "warning": [55.0, 65.0],
+      "danger": [65.0, null]
+    }
+  },
+  "power_thermo_2" : {
+    "name": "Pack C Temp.",
+    "description": "The Temperature of Battery Pack C",
+    "unit": "celcius",
+    "thresholds": {
+      "danger": [null, -10.0],
+      "warning": [-10, 0.0],
+      "success": [0.0, 55.0],
+      "warning": [55.0, 65.0],
+      "danger": [65.0, null]
+    }
+  },
+  "clamp_thermo_0" : {
+    "name": "Front Clamp Temp.",
+    "description": "The averate temperature of the rear clamp brake",
+    "unit": "celcius",
+    "thresholds": {
+      "danger": [null, -10.0],
+      "warning": [-10, 0.0],
+      "success": [0.0, 300.0],
+      "warning": [300.0, 350.0],
+      "danger": [350.0, null]
+    }
+  },
+  "clamp_thermo_1" : {
+    "name": "Rear Clamp Temp.",
+    "description": "The averate temperature of the rear clamp brake",
+    "unit": "celcius",
+    "thresholds": {
+      "danger": [null, -10.0],
+      "warning": [-10, 0.0],
+      "success": [0.0, 300.0],
+      "warning": [300.0, 350.0],
+      "danger": [350.0, null]
+    }
+  },
+  "frame_thermo" : {
+    "name": "Frame Temp.",
+    "description": "The teperature of the central frame member",
+    "unit": "celcius",
+    "thresholds": {
+      "danger": [null, -10.0],
+      "warning": [-10, 0.0],
+      "success": [0.0, 55.0],
+      "warning": [55.0, 65.0],
+      "danger": [65.0, null]
+    }
+  },
+  "voltage_0" : {
+    "name": "Battery Pack A Voltage",
+    "description": "The voltage of battery pack A",
+    "unit": "voltage_0",
+    "thresholds": {
+      "danger": [null, 28.0],
+      "warning": [28.0, 31.0],
+      "success": [31.0, 42.0],
+      "warning": [42.0, 45.0],
+      "danger": [45.0, null]
+    }
+  },
+  "voltage_1" : {
+    "name": "Battery Pack B Voltage",
+    "description": "The voltage of battery pack B",
+    "unit": "voltage_1",
+    "thresholds": {
+      "danger": [null, 28.0],
+      "warning": [28.0, 31.0],
+      "success": [31.0, 42.0],
+      "warning": [42.0, 45.0],
+      "danger": [45.0, null]
+    }
+  },
+  "voltage_2" : {
+    "name": "Battery Pack C Voltage",
+    "description": "The voltage of battery pack C",
+    "unit": "volts",
+    "thresholds": {
+      "danger": [null, 28.0],
+      "warning": [28.0, 31.0],
+      "success": [31.0, 42.0],
+      "warning": [42.0, 45.0],
+      "danger": [45.0, null]
+    }
+  },
+  "current_0" : {
+    "name": "Battery Pack A Current",
+    "description": "The current draw on battery pack A",
+    "unit": "amps",
+    "thresholds": {
+      "danger": [null, -0.05],
+      "success": [-0.05, 10.0],
+      "warning": [10.0, 12.0],
+      "danger": [12.0, null]
+    }
+  },
+  "current_1" : {
+    "name": "Battery Pack B Current",
+    "description": "The current draw on battery pack B",
+    "unit": "amps",
+    "thresholds": {
+      "danger": [null, -0.05],
+      "success": [-0.05, 10.0],
+      "warning": [10.0, 12.0],
+      "danger": [12.0, null]
+    }
+  },
+  "current_2" : {
+    "name": "Battery Pack C Current",
+    "description": "The current draw on battery pack C",
+    "unit": "amps",
+    "thresholds": {
+      "danger": [null, -0.05],
+      "success": [-0.05, 10.0],
+      "warning": [10.0, 12.0],
+      "danger": [12.0, null]
+    }
+  },
+  "rpm_0" : {
+    "name": "Front Wheel RPM",
+    "description": "The RPM of the front wheel",
+    "unit": "rpm",
+    "thresholds": {
+      "danger": [null, -0.05],
+      "success": [-0.05, 6000.0],
+      "warning": [6000.0, 6500.0],
+      "danger": [6500.0, null]
+    }
+  },
+  "rpm_1" : {
+    "name": "Middle Wheel RPM",
+    "description": "The RPM of the middle wheel",
+    "unit": "rpm",
+    "thresholds": {
+      "danger": [null, -0.05],
+      "success": [-0.05, 6000.0],
+      "warning": [6000.0, 6500.0],
+      "danger": [6500.0, null]
+    }
+  },
+  "rpm_2" : {
+    "name": "Rear Wheel RPM",
+    "description": "The RPM of the rear Wheel",
+    "unit": "rpm",
+    "thresholds": {
+      "danger": [null, -0.05],
+      "success": [-0.05, 6000.0],
+      "warning": [6000.0, 6500.0],
+      "danger": [6500.0, null]
+    }
+  },
+  "stripe_count" : {
+    "name": "Stripe Count",
+    "description": "The number of strips the pod has passed",
+    "unit": "strips",
+    "thresholds": {
+      "danger": [null, -1],
+      "success": [-1, 400.0],
+      "warning": [400.0, 420.0],
+      "danger": [420.0, null]
+    }
+  }
+}

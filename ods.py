@@ -10,6 +10,7 @@ from influxdb import InfluxDBClient
 from raw_reader import RawReader
 from openloop.http.app import set_ods, set_pod, app, WEB_ROOT
 from openloop.pod import Pod
+from openloop.heart import Heart
 
 PACKET_LENGTH = 240
 
@@ -80,6 +81,9 @@ class ODSServer:
         self.spacex_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.last_spacex_packet = datetime.now()
         self.state = {}
+
+    def get_state(self):
+        return self.state
 
     def parse_message(self, msg):
         (version, size, state, solenoid_mask, timestamp,
@@ -197,7 +201,7 @@ class ODSServer:
             if length == PACKET_LENGTH:
                 results = self.parse_message(message)
                 self.store_metrics(results)
-
+                print(results)
                 self.state = results
 
                 if datetime.now() - self.last_spacex_packet > SPACEX_INTERVAL:
@@ -337,6 +341,7 @@ def main():
 
     pod_addr = ('127.0.0.1', 7779)
     pod = Pod(pod_addr)
+
     set_pod(pod)
 
     print("Connecting to pod tcp://%s:%d" % pod_addr)
@@ -347,11 +352,15 @@ def main():
 
     WEB_ROOT = args.web_root
 
+    heart = Heart(0.5, pod.ping)
+
     t1 = threading.Thread(target=server.run)
     t2 = threading.Thread(target=app.run, args=list(http_addr))
+    t3 = threading.Thread(target=heart.start)
 
     t1.start()
     t2.start()
+    t3.start()
 
     while True:
         time.sleep(1)
