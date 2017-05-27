@@ -154,7 +154,8 @@ class Pod:
             self.sock = socket.create_connection(self.addr, 1)
 
             self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+            if getattr(socket, 'SO_REUSEPORT', None) is not None:
+                self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
 
             self.recieved = 0
             self.last_ping = datetime.now()
