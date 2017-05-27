@@ -1,15 +1,19 @@
 #!/bin/bash
 
 
-SERVER="python ods.py"
+SERVER="python3 ./ods.py"
 SERVER_OUT="server.out"
 SERVER_ERR="server.err"
 PORT=7778
 
+MOCK_POD="python3 ./tests/mock_pod.py"
 FIFO="./data-fifo"
 N_ENTRIES=1000
 MEASUREMENTS="test test2"
 TEST_DATA_FILE="./tests/assets/hyperloop-telemetry.log.bin"
+
+( $MOCK_POD )&
+mock_pid=$!
 
 # start the server in the background
 # ( $SERVER -p $PORT > $SERVER_OUT 2> $SERVER_ERR )&
@@ -23,6 +27,7 @@ if [ $? -eq 0 ]; then
   function cleanup {
     echo "cleanup: Sending SIGTERM to pid $server_pid"
     kill -SIGTERM $server_pid
+    kill -SIGTERM $mock_pid
   }
   trap cleanup EXIT
 

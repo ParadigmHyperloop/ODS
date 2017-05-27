@@ -61,13 +61,12 @@ picture_
 ## Running
 
 If you have Influxdb running on your localhost and the pod is on the same
-network as your computer, then you can just run `./server.py`.  Otherwise,
+network as your computer, then you can just run `./run.py`.  Otherwise,
 use the following arguments to tell the ODS server where you have InfluxDB
 running so that it can dump the incoming telemetry data.
 
 ```
-$ ./ods.py --help
-usage: ods.py [-h] [-v] [-p PORT] [-d DIRECTORY] [-s SERIAL]
+usage: run.py [-h] [-v] [-p PORT] [-d DIRECTORY] [-s SERIAL]
               [--spacex-host SPACEX_HOST] [--spacex-port SPACEX_PORT]
               [--team-id TEAM_ID] [--influx-host INFLUX_HOST]
               [--influx-port INFLUX_PORT] [--influx-user INFLUX_USER]

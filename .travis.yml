@@ -14,10 +14,12 @@ before_install:
   - sudo dpkg -i influxdb_1.0.2_amd64.deb
   - travis_retry sudo service influxdb restart
   - sudo service influxdb status
+  - sudo apt-get update
+  - sudo apt-get install python3
 
 before_script:
-  - pip install -r requirements.txt
+  - pip3 install -r requirements.txt
 
 script:
-  - python -m py_compile ods.py
+  - python3 -m py_compile ods.py
   - ./tests/integration.sh

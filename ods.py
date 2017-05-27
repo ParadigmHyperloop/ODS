@@ -4,15 +4,19 @@ import struct
 import logging
 import argparse
 import threading
+import time
 from datetime import datetime, timedelta
 from influxdb import InfluxDBClient
 from raw_reader import RawReader
+from openloop.http.app import set_ods, set_pod, app, WEB_ROOT
+from openloop.pod import Pod
+from openloop.heart import Heart
 
 PACKET_LENGTH = 240
 
 SKATE_0_MASK = 0x0001
 SKATE_1_MASK = 0x0002
-SKATE_3_MASK = 0x0004
+SKATE_2_MASK = 0x0004
 CLAMP_ENG_0_MASK = 0x0008
 CLAMP_REL_0_MASK = 0x0010
 CLAMP_ENG_1_MASK = 0x0020
@@ -28,6 +32,7 @@ LAT_FIL_0_MASK = 0x4000
 LAT_FIL_1_MASK = 0x8000
 
 SPACEX_INTERVAL = timedelta(seconds=0.3)
+
 
 class SpaceXStatus:
     FAULT = 0
@@ -53,6 +58,7 @@ class SpaceXPacket:
         self.battery_temperature = battery_temperature
         self.pod_temperature = pod_temperature
         self.stripe_count = stripe_count
+        self.current_sender = None
 
     def to_bytes(self):
         """Convert to bytes"""
@@ -74,9 +80,13 @@ class ODSServer:
         self.team_id = team_id
         self.spacex_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.last_spacex_packet = datetime.now()
+        self.state = {}
+
+    def get_state(self):
+        return self.state
 
     def parse_message(self, msg):
-        (state, solenoid_mask, timestamp,
+        (version, size, state, solenoid_mask, timestamp,
          position_x, position_y, position_z,
          velocity_x, velocity_y, velocity_z,
          acceleration_x, acceleration_y, acceleration_z,
@@ -98,14 +108,15 @@ class ODSServer:
          voltage_0, voltage_1, voltage_2,
          current_0, current_1, current_2,
          rpm_0, rpm_1, rpm_2,
-         stripe_count) = struct.unpack("<IIQ55fI", msg)
+         stripe_count) = struct.unpack("<BHBIQ55fI", msg)
 
         params = {
             "state": state,
+            "version": version,
             "solenoid_mask": solenoid_mask,
             "SOL_SKATE_0": 1 if (solenoid_mask & SKATE_0_MASK) else 0,
             "SOL_SKATE_1": 1 if (solenoid_mask & SKATE_1_MASK) else 0,
-            "SOL_SKATE_3": 1 if (solenoid_mask & SKATE_3_MASK) else 0,
+            "SOL_SKATE_2": 1 if (solenoid_mask & SKATE_2_MASK) else 0,
             "SOL_CLAMP_ENG_0": 1 if (solenoid_mask & CLAMP_ENG_0_MASK) else 0,
             "SOL_CLAMP_REL_0": 1 if (solenoid_mask & CLAMP_REL_0_MASK) else 0,
             "SOL_CLAMP_ENG_1": 1 if (solenoid_mask & CLAMP_ENG_1_MASK) else 0,
@@ -185,19 +196,19 @@ class ODSServer:
         sock.bind(self.addrport)
 
         while True:
-            message = sock.recv(PACKET_LENGTH)
+            message, addr = sock.recvfrom(PACKET_LENGTH)
             length = len(message)
             if length == PACKET_LENGTH:
                 results = self.parse_message(message)
-                print(results)
                 self.store_metrics(results)
-
+                print(results)
                 self.state = results
 
                 if datetime.now() - self.last_spacex_packet > SPACEX_INTERVAL:
                     pkt = self.make_spacex_packet()
                     self.send_to_spacex(pkt)
 
+                self.current_sender = addr
             elif length == 0:
                 break
             else:
@@ -220,20 +231,20 @@ class ODSServer:
 
     def make_spacex_packet(self):
         state_mapper = [
-            SpaceXStatus.IDLE,     # POST = 0,
-            SpaceXStatus.IDLE,     # Boot = 1,
-            SpaceXStatus.IDLE,     # LPFill = 2,
-            SpaceXStatus.IDLE,     # HPFill = 3,
-            SpaceXStatus.IDLE,     # Load = 4,
-            SpaceXStatus.IDLE,     # Standby = 5,
-            SpaceXStatus.READY,    # Armed = 6,
-            SpaceXStatus.PUSHING,  # Pushing = 7,
-            SpaceXStatus.COASTING, # Coasting = 8,
-            SpaceXStatus.BRAKING,  # Braking = 9,
-            SpaceXStatus.IDLE,     # Vent = 10,
-            SpaceXStatus.IDLE,     # Retrieval = 11,
-            SpaceXStatus.FAULT,    # Emergency = 12,
-            SpaceXStatus.IDLE      # Shutdown = 13,
+            SpaceXStatus.IDLE,      # POST = 0,
+            SpaceXStatus.IDLE,      # Boot = 1,
+            SpaceXStatus.IDLE,      # LPFill = 2,
+            SpaceXStatus.IDLE,      # HPFill = 3,
+            SpaceXStatus.IDLE,      # Load = 4,
+            SpaceXStatus.IDLE,      # Standby = 5,
+            SpaceXStatus.READY,     # Armed = 6,
+            SpaceXStatus.PUSHING,   # Pushing = 7,
+            SpaceXStatus.COASTING,  # Coasting = 8,
+            SpaceXStatus.BRAKING,   # Braking = 9,
+            SpaceXStatus.IDLE,      # Vent = 10,
+            SpaceXStatus.IDLE,      # Retrieval = 11,
+            SpaceXStatus.FAULT,     # Emergency = 12,
+            SpaceXStatus.IDLE       # Shutdown = 13,
         ]
 
         spacex_status = 0
@@ -275,6 +286,12 @@ def main():
     parser.add_argument("--team-id", default=0, type=int,
                         help="The team id assigned by spacex")
 
+    # HTTP Server Arguments
+    parser.add_argument("--http-host", default='0.0.0.0',
+                        help="The hostname/ip to bind the HTTP Server to")
+    parser.add_argument("--http-port", default=7777, type=int,
+                        help="The port to bind the HTTP Server to")
+
     # Influx arguments
     parser.add_argument("--influx-host", default='127.0.0.1',
                         help="Influxdb hostname")
@@ -290,6 +307,9 @@ def main():
 
     parser.add_argument("--influx-name", default='example',
                         help="Influxdb database name")
+
+    parser.add_argument("--web-root", default='../web/src',
+                        help="Path to the Pod Web Static Files")
 
     args = parser.parse_args()
 
@@ -311,22 +331,43 @@ def main():
     spacex_addr = None
     # Setup the data handler, tell it about the spacex server
     if args.spacex_host:
-        print(("Forwarding Telemetry to %s:%d" % (args.spacex_host, args.spacex_port)))
+        print(("Forwarding Telemetry to %s:%d" % (args.spacex_host,
+                                                  args.spacex_port)))
         spacex_addr = (args.spacex_host, args.spacex_port)
 
     print(("Starting ODS Server on udp://0.0.0.0:%d" % args.port))
     server = ODSServer(("", args.port), args.team_id, spacex_addr, influx)
+    set_ods(server)
 
-    # Startup the main reciever
-    server.run()
+    pod_addr = ('127.0.0.1', 7779)
+    pod = Pod(pod_addr)
+
+    set_pod(pod)
+
+    print("Connecting to pod tcp://%s:%d" % pod_addr)
+    pod.connect()
+
+    http_addr = (args.http_host, args.http_port)
+    print("Starting HTTP Server on tcp://%s:%d" % http_addr)
+
+    WEB_ROOT = args.web_root
+
+    heart = Heart(0.5, pod.ping)
+
+    t1 = threading.Thread(target=server.run)
+    t2 = threading.Thread(target=app.run, args=list(http_addr))
+    t3 = threading.Thread(target=heart.start)
+
+    t1.start()
+    t2.start()
+    t3.start()
+
+    while True:
+        time.sleep(1)
 
 
 if __name__ == "__main__":
-    while True:
-        try:
-            main()
-        except KeyboardInterrupt as e:
-            break
-        except Exception as e:
-            print(e)
-            print("*** AUTOMATIC SERVER RESTART ***")
+    try:
+        main()
+    except KeyboardInterrupt as e:
+        pass

@@ -3,7 +3,7 @@ all:
 	. .env/bin/activate && pip install -r requirements.txt
 
 run: clean all
-	. .env/bin/activate && ./server.py
+	. .env/bin/activate && ./run.py
 
 test:
 	./test
