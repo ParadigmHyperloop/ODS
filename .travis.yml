@@ -21,5 +21,5 @@ before_script:
   - pip3 install -r requirements.txt
 
 script:
-  - python -m py_compile run.py
+  - python3 -m py_compile ods.py
   - ./tests/integration.sh
