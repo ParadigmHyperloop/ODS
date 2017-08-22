@@ -13,35 +13,33 @@ class PodStateType(type):
     MAP = {
         'POST': 0,
         'BOOT': 1,
-        'LPFILL': 2,
-        'HPFILL': 3,
-        'LOAD': 4,
-        'STANDBY': 5,
-        'ARMED': 6,
-        'PUSHING': 7,
-        'COASTING': 8,
-        'BRAKING': 9,
-        'VENT': 10,
-        'RETRIEVAL': 11,
-        'EMERGENCY': 12,
-        'SHUTDOWN': 13
+        'HPFILL': 2,
+        'LOAD': 3,
+        'STANDBY': 4,
+        'ARMED': 5,
+        'PUSHING': 6,
+        'COASTING': 7,
+        'BRAKING': 8,
+        'VENT': 9,
+        'RETRIEVAL': 10,
+        'EMERGENCY': 11,
+        'SHUTDOWN': 12
     }
 
     SHORT_MAP = {
         'POST': 0,
         'BOOT': 1,
-        'LPFL': 2,
-        'HPFL': 3,
-        'LOAD': 4,
-        'STBY': 5,
-        'ARMD': 6,
-        'PUSH': 7,
-        'COAS': 8,
-        'BRKE': 9,
-        'VENT': 10,
-        'RETR': 11,
-        'EMRG': 12,
-        'SDWN': 13
+        'HPFL': 2,
+        'LOAD': 3,
+        'STBY': 4,
+        'ARMD': 5,
+        'PUSH': 6,
+        'COAS': 7,
+        'BRKE': 8,
+        'VENT': 9,
+        'RETR': 10,
+        'EMRG': 11,
+        'SDWN': 12
     }
 
     def __getattr__(cls, name):
@@ -164,6 +162,7 @@ class Pod:
             raise e
 
     def close(self):
+        print("Closing Pod Connection")
         if self.sock is not None:
             self.sock.close()
             self.sock = None
