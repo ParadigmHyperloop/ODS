@@ -17,19 +17,15 @@ PACKET_LENGTH = 216
 SKATE_0_MASK = 0x0001
 SKATE_1_MASK = 0x0002
 SKATE_2_MASK = 0x0004
-CLAMP_ENG_0_MASK = 0x0008
-CLAMP_REL_0_MASK = 0x0010
-CLAMP_ENG_1_MASK = 0x0020
-CLAMP_REL_1_MASK = 0x0040
+SKATE_3_MASK = 0x0008
+CLAMP_ENG_0_MASK = 0x0010
+CLAMP_REL_0_MASK = 0x0020
+CLAMP_ENG_1_MASK = 0x0040
+CLAMP_REL_1_MASK = 0x0080
 WHEEL_CAL_0_MASK = 0x0080
-WHEEL_CAL_1_MASK = 0x0100
-WHEEL_CAL_2_MASK = 0x0200
-HPFIL_MASK = 0x0400
-VENT_MASK = 0x0800
-CLAMP_FIL_0_MASK = 0x1000
-CLAMP_FIL_1_MASK = 0x2000
-LAT_FIL_0_MASK = 0x4000
-LAT_FIL_1_MASK = 0x8000
+HPFIL_MASK = 0x0100
+VENT_MASK = 0x0200
+PUSH_MASK = 0x0400
 
 SPACEX_INTERVAL = timedelta(seconds=0.3)
 
@@ -114,12 +110,14 @@ class ODSServer:
             "SOL_SKATE_0": 1 if (solenoid_mask & SKATE_0_MASK) else 0,
             "SOL_SKATE_1": 1 if (solenoid_mask & SKATE_1_MASK) else 0,
             "SOL_SKATE_2": 1 if (solenoid_mask & SKATE_2_MASK) else 0,
+            "SOL_SKATE_3": 1 if (solenoid_mask & SKATE_3_MASK) else 0,
             "SOL_CLAMP_ENG_0": 1 if (solenoid_mask & CLAMP_ENG_0_MASK) else 0,
             "SOL_CLAMP_REL_0": 1 if (solenoid_mask & CLAMP_REL_0_MASK) else 0,
             "SOL_CLAMP_ENG_1": 1 if (solenoid_mask & CLAMP_ENG_1_MASK) else 0,
             "SOL_CLAMP_REL_1": 1 if (solenoid_mask & CLAMP_REL_1_MASK) else 0,
             "SOL_HPFIL": 1 if (solenoid_mask & HPFIL_MASK) else 0,
             "SOL_VENT": 1 if (solenoid_mask & VENT_MASK) else 0,
+            "pusher_present": 1 if (solenoid_mask & PUSH_MASK) else 0,
             "timestamp": timestamp,
             "position_x": position_x,
             "position_y": position_y,
@@ -348,7 +346,7 @@ def main():
 
     WEB_ROOT = args.web_root
 
-    heart = Heart(0.5, pod.ping)
+    heart = Heart(10, pod.ping)
 
     t1 = threading.Thread(target=server.run)
     t2 = threading.Thread(target=app.run, args=list(http_addr))
