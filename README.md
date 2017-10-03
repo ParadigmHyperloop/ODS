@@ -64,7 +64,7 @@ picture_
 
 ## Prerequisites
 
-* A sane python 2.7 environment.
+* A sane python 3 environment (use virtualenv).
 * InfluxDB (`brew install influxdb`)
 * Grafana (`brew install grafana`)
 
