@@ -268,7 +268,8 @@ class ODSServer:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Openloop Data Shuttle")
+    parser = argparse.ArgumentParser(description="Paradigm (formerly "
+                                                 "Openloop) Data Shuttle")
 
     parser.add_argument("-v", "--verbose", action="store_true")
 
