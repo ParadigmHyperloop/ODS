@@ -1,4 +1,5 @@
 import time
+import traceback
 
 
 class Heart:
@@ -9,9 +10,17 @@ class Heart:
 
     def start(self):
         self.running = True
+        print("[Heart] Starting")
+
         while self.running:
-            self.callback(self)
+            try:
+                self.callback(self)
+            except Exception as e:
+                print("[Heart] Exception: {}".format(e))
+
             time.sleep(self.interval)
 
     def stop(self):
+        print("[Heart] Stopped")
+
         self.running = False

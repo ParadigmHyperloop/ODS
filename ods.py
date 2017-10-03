@@ -12,24 +12,22 @@ from openloop.http.app import set_ods, set_pod, app, WEB_ROOT
 from openloop.pod import Pod
 from openloop.heart import Heart
 
-PACKET_LENGTH = 240
+PACKET_LENGTH = 216
 
 SKATE_0_MASK = 0x0001
 SKATE_1_MASK = 0x0002
 SKATE_2_MASK = 0x0004
-CLAMP_ENG_0_MASK = 0x0008
-CLAMP_REL_0_MASK = 0x0010
-CLAMP_ENG_1_MASK = 0x0020
-CLAMP_REL_1_MASK = 0x0040
+SKATE_3_MASK = 0x0008
+CLAMP_ENG_0_MASK = 0x0010
+CLAMP_REL_0_MASK = 0x0020
+CLAMP_ENG_1_MASK = 0x0040
+CLAMP_REL_1_MASK = 0x0080
 WHEEL_CAL_0_MASK = 0x0080
-WHEEL_CAL_1_MASK = 0x0100
-WHEEL_CAL_2_MASK = 0x0200
-HPFIL_MASK = 0x0400
-VENT_MASK = 0x0800
-CLAMP_FIL_0_MASK = 0x1000
-CLAMP_FIL_1_MASK = 0x2000
-LAT_FIL_0_MASK = 0x4000
-LAT_FIL_1_MASK = 0x8000
+HPFIL_MASK = 0x0100
+VENT_MASK = 0x0200
+PUSH_MASK = 0x0400
+PACK_A_ENG_MASK = 0x0800
+PACK_B_ENG_MASK = 0x1000
 
 SPACEX_INTERVAL = timedelta(seconds=0.3)
 
@@ -62,13 +60,28 @@ class SpaceXPacket:
 
     def to_bytes(self):
         """Convert to bytes"""
-        pattern = '!BBi7I'
+        pattern = '!BB7iI'
+        accel = self.acceleration
+        if accel >= 1073741823 or accel <= -1073741823:
+            accel = 0
 
-        b = struct.pack(pattern, self.team_id, self.status, self.acceleration,
-                        self.position, self.velocity, self.battery_voltage,
-                        self.battery_current, self.battery_temperature,
-                        self.pod_temperature, self.stripe_count)
+        v = self.velocity
+        if v >= 1073741823 or v <= -1073741823:
+            v = 0
 
+        x = self.position
+        if x >= 1073741823 or x <= -1073741823:
+            x = 0
+
+        print("{} {} {} {} {} {}".format(pattern, self.team_id, self.status, accel, x, v))
+        try:
+            b = struct.pack(pattern, self.team_id, self.status, accel,
+                            x, v, 0,
+                            0, 0,
+                            0, 0)
+        except Exception as e:
+            print(e)
+            return b'\0'
         return b
 
 
@@ -90,14 +103,13 @@ class ODSServer:
          position_x, position_y, position_z,
          velocity_x, velocity_y, velocity_z,
          acceleration_x, acceleration_y, acceleration_z,
-         corner_0, corner_1, corner_2, corner_3,
-         wheel_0, wheel_1, wheel_2,
-         lateral_0, lateral_1, lateral_2,
+         pusher_0, pusher_1, pusher_2, pusher_3,
+         levitation_0, levitation_1, levitation_2, levitation_3,
+         levitation_4, levitation_5, levitation_6, levitation_7,
          hp_pressure,
          reg_pressure_0, reg_pressure_1, reg_pressure_2, reg_pressure_3,
          clamp_pressure_0, clamp_pressure_1,
-         skate_pressure_0, skate_pressure_1,
-         lateral_pressure_0, lateral_pressure_1,
+         brake_tank_0, brake_tank_1,
          hp_thermo,
          reg_thermo_0, reg_thermo_1, reg_thermo_2, reg_thermo_3,
          reg_surf_thermo_0, reg_surf_thermo_1,
@@ -105,10 +117,8 @@ class ODSServer:
          power_thermo_0, power_thermo_1, power_thermo_2, power_thermo_3,
          clamp_thermo_0, clamp_thermo_1,
          frame_thermo,
-         voltage_0, voltage_1, voltage_2,
-         current_0, current_1, current_2,
-         rpm_0, rpm_1, rpm_2,
-         stripe_count) = struct.unpack("<BHBIQ55fI", msg)
+         voltage_0, voltage_1,
+         current_0, current_1) = struct.unpack("<BHBIQ50f", msg)
 
         params = {
             "state": state,
@@ -117,19 +127,16 @@ class ODSServer:
             "SOL_SKATE_0": 1 if (solenoid_mask & SKATE_0_MASK) else 0,
             "SOL_SKATE_1": 1 if (solenoid_mask & SKATE_1_MASK) else 0,
             "SOL_SKATE_2": 1 if (solenoid_mask & SKATE_2_MASK) else 0,
+            "SOL_SKATE_3": 1 if (solenoid_mask & SKATE_3_MASK) else 0,
             "SOL_CLAMP_ENG_0": 1 if (solenoid_mask & CLAMP_ENG_0_MASK) else 0,
             "SOL_CLAMP_REL_0": 1 if (solenoid_mask & CLAMP_REL_0_MASK) else 0,
             "SOL_CLAMP_ENG_1": 1 if (solenoid_mask & CLAMP_ENG_1_MASK) else 0,
             "SOL_CLAMP_REL_1": 1 if (solenoid_mask & CLAMP_REL_1_MASK) else 0,
-            "SOL_WHEEL_CAL_0": 1 if (solenoid_mask & WHEEL_CAL_0_MASK) else 0,
-            "SOL_WHEEL_CAL_1": 1 if (solenoid_mask & WHEEL_CAL_1_MASK) else 0,
-            "SOL_WHEEL_CAL_2": 1 if (solenoid_mask & WHEEL_CAL_2_MASK) else 0,
+            "PACK_A_ENG": 1 if (solenoid_mask & PACK_A_ENG_MASK) else 0,
+            "PACK_B_ENG": 1 if (solenoid_mask & PACK_B_ENG_MASK) else 0,
             "SOL_HPFIL": 1 if (solenoid_mask & HPFIL_MASK) else 0,
             "SOL_VENT": 1 if (solenoid_mask & VENT_MASK) else 0,
-            "SOL_CLAMP_FIL_0": 1 if (solenoid_mask & CLAMP_FIL_0_MASK) else 0,
-            "SOL_CLAMP_FIL_1": 1 if (solenoid_mask & CLAMP_FIL_1_MASK) else 0,
-            "SOL_LAT_FIL_0": 1 if (solenoid_mask & LAT_FIL_0_MASK) else 0,
-            "SOL_LAT_FIL_1": 1 if (solenoid_mask & LAT_FIL_1_MASK) else 0,
+            "pusher_present": 1 if (solenoid_mask & PUSH_MASK) else 0,
             "timestamp": timestamp,
             "position_x": position_x,
             "position_y": position_y,
@@ -140,16 +147,18 @@ class ODSServer:
             "acceleration_x": acceleration_x,
             "acceleration_y": acceleration_y,
             "acceleration_z": acceleration_z,
-            "corner_0": corner_0,
-            "corner_1": corner_1,
-            "corner_2": corner_2,
-            "corner_3": corner_3,
-            "wheel_0": wheel_0,
-            "wheel_1": wheel_1,
-            "wheel_2": wheel_2,
-            "lateral_0": lateral_0,
-            "lateral_1": lateral_1,
-            "lateral_2": lateral_2,
+            "levitation_0": levitation_0,
+            "levitation_1": levitation_1,
+            "levitation_2": levitation_2,
+            "levitation_3": levitation_3,
+            "levitation_4": levitation_4,
+            "levitation_5": levitation_5,
+            "levitation_6": levitation_6,
+            "levitation_7": levitation_7,
+            "pusher_0": pusher_0,
+            "pusher_1": pusher_1,
+            "pusher_2": pusher_2,
+            "pusher_3": pusher_3,
             "hp_pressure": hp_pressure,
             "reg_pressure_0": reg_pressure_0,
             "reg_pressure_1": reg_pressure_1,
@@ -157,10 +166,8 @@ class ODSServer:
             "reg_pressure_3": reg_pressure_3,
             "clamp_pressure_0": clamp_pressure_0,
             "clamp_pressure_1": clamp_pressure_1,
-            "skate_pressure_0": skate_pressure_0,
-            "skate_pressure_1": skate_pressure_1,
-            "lateral_pressure_0": lateral_pressure_0,
-            "lateral_pressure_1": lateral_pressure_1,
+            "brake_tank_0": brake_tank_0,
+            "brake_tank_1": brake_tank_1,
             "hp_thermo": hp_thermo,
             "reg_thermo_0": reg_thermo_0,
             "reg_thermo_1": reg_thermo_1,
@@ -178,14 +185,9 @@ class ODSServer:
             "frame_thermo": frame_thermo,
             "voltage_0": voltage_0,
             "voltage_1": voltage_1,
-            "voltage_2": voltage_2,
             "current_0": current_0,
             "current_1": current_1,
-            "current_2": current_2,
-            "rpm_0": rpm_0,
-            "rpm_1": rpm_1,
-            "rpm_2": rpm_2,
-            "stripe_count": stripe_count
+
         }
 
         return params
@@ -261,7 +263,7 @@ class ODSServer:
             battery_current=int(self.state['current_0']) * 1000,
             battery_temperature=int(self.state['power_thermo_0']) * 10,
             pod_temperature=int(self.state['frame_thermo']) * 10,
-            stripe_count=int(self.state['stripe_count'])
+            stripe_count=int(0)
         )
 
 
@@ -280,8 +282,8 @@ def main():
 
     # Used for the SpaceX data stream format
     parser.add_argument("--spacex-host", default=None,
-                        help="The hostname/ip of the SpaceX data reciever")
-    parser.add_argument("--spacex-port", default=0, type=int,
+                        help="IP of the SpaceX data reciever (192.168.0.1)")
+    parser.add_argument("--spacex-port", default=3000, type=int,
                         help="The SpaceX data reciever port")
     parser.add_argument("--team-id", default=0, type=int,
                         help="The team id assigned by spacex")
@@ -311,6 +313,12 @@ def main():
     parser.add_argument("--web-root", default='../web/src',
                         help="Path to the Pod Web Static Files")
 
+    parser.add_argument("--pod-addr", default='192.168.0.10',
+                        help="IP of the pod")
+
+    parser.add_argument("--pod-port", default=7779, type=int,
+                        help="Command Port on the pod")
+
     args = parser.parse_args()
 
     if args.verbose:
@@ -339,30 +347,41 @@ def main():
     server = ODSServer(("", args.port), args.team_id, spacex_addr, influx)
     set_ods(server)
 
-    pod_addr = ('127.0.0.1', 7779)
+    pod_addr = (args.pod_addr, args.pod_port)
     pod = Pod(pod_addr)
 
     set_pod(pod)
-
-    print("Connecting to pod tcp://%s:%d" % pod_addr)
-    pod.connect()
 
     http_addr = (args.http_host, args.http_port)
     print("Starting HTTP Server on tcp://%s:%d" % http_addr)
 
     WEB_ROOT = args.web_root
 
-    heart = Heart(0.5, pod.ping)
+    t2 = threading.Thread(target=app.run, args=list(http_addr))
+    t2.start()
+
+    print("Connecting to pod tcp://%s:%d" % pod_addr)
+    while not pod.is_connected():
+        try:
+            pod.connect()
+        except Exception as e:
+            print(e)
+        time.sleep(1)
+
+    heart = Heart(10, pod.ping)
 
     t1 = threading.Thread(target=server.run)
-    t2 = threading.Thread(target=app.run, args=list(http_addr))
-    t3 = threading.Thread(target=heart.start)
-
     t1.start()
-    t2.start()
+
+    t3 = threading.Thread(target=heart.start)
     t3.start()
 
-    while True:
+    # Maintain Connection if it fails
+    while not pod.is_connected():
+        try:
+            pod.connect()
+        except Exception as e:
+            print(e)
         time.sleep(1)
 
 
