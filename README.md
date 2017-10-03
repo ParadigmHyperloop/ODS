@@ -68,6 +68,26 @@ picture_
 * InfluxDB (`brew install influxdb`)
 * Grafana (`brew install grafana`)
 
+
+To setup pip on a mac, use the following:
+
+```
+sudo easy_install pip
+sudo pip install virtualenv
+```
+
+## Install Dependencies
+
+```
+$ virtualenv -ppython3 .env
+...
+$ source .env/bin/activate
+$ which python3
+/Users/edhurtig/dev/ODS2/.env/bin/python3  # Just make sure it's not the global python
+$ pip install -r requirements.txt
+...
+```
+
 ## Running
 
 If you have Influxdb running on your localhost and the [core control code](https://github.com/ParadigmHyperloop/hyperloop) is running on your computer, then you can just run `./ods.py --pod-addr="127.0.0.1"`.  Otherwise,
