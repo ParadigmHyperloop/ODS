@@ -162,7 +162,6 @@ class Pod:
             raise e
 
     def close(self):
-        print("Closing Pod Connection")
         if self.sock is not None:
             self.sock.close()
             self.sock = None
