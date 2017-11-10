@@ -90,6 +90,8 @@ class Pod:
         self.timeout_handler = None
 
     def ping(self, _):
+        if not self.is_connected():
+            return None
         response = self.run("ping", timeout=PING_TIMEOUT)
         if response is None:
             if self.timeout_handler is not None:
@@ -104,12 +106,15 @@ class Pod:
         if timeout is None:
             timeout = timedelta(seconds=1)
 
+        if not self.is_connected():
+            return None
+
         if self.lock.acquire():
-            if not self.is_connected():
-                self.connect()
-            self.send(cmd + "\n")
-            data = self.recv(timeout=timeout)
-            self.lock.release()
+            try:
+                self.send(cmd + "\n")
+                data = self.recv(timeout=timeout)
+            finally:
+                self.lock.release()
             return data
 
         raise RuntimeError("Failed to acquire Lock on Channel %s" % self)
@@ -163,6 +168,7 @@ class Pod:
 
     def close(self):
         if self.sock is not None:
+            self.state = None
             self.sock.close()
             self.sock = None
 

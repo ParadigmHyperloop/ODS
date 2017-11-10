@@ -10,7 +10,6 @@ class Heart:
 
     def start(self):
         self.running = True
-        print("[Heart] Starting")
 
         while self.running:
             try:
@@ -21,6 +20,4 @@ class Heart:
             time.sleep(self.interval)
 
     def stop(self):
-        print("[Heart] Stopped")
-
         self.running = False
