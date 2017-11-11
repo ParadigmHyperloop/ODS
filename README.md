@@ -138,6 +138,16 @@ To run ODS local full-system HOOTL testing, along with the `packet_test_server.p
 ./ods.py --pod-addr="127.0.0.1" --spacex-host="127.0.0.1" --spacex-port=3000 --team-id=11
 ```
 
+# PodCTL
+
+A utility called PodCTL is also included in this repo.  PodCTL acts as a
+terminal emulator for the remote command interface. It utilizes the same module
+for connecting to the pod as ODS itself and is thus co-located in this repo.
+
+```
+./podctl.py --host "127.0.0.1"
+```
+
 # License
 
 See the [LICENSE](LICENSE) for full licensing details.
