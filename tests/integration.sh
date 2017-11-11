@@ -1,12 +1,12 @@
 #!/bin/bash
 
 
-SERVER="python3 ./ods.py"
+SERVER="./ods.py"
 SERVER_OUT="server.out"
 SERVER_ERR="server.err"
 PORT=7778
 
-MOCK_POD="python3 ./tests/mock_pod.py"
+MOCK_POD="./tests/mock_pod.py"
 FIFO="./data-fifo"
 N_ENTRIES=1000
 MEASUREMENTS="test test2"
