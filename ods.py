@@ -378,9 +378,10 @@ def main():
     t3.start()
 
     # Maintain Connection if it fails
-    while not pod.is_connected():
+    while True:
         try:
-            pod.connect()
+            if not pod.is_connected():
+                pod.connect()
         except Exception as e:
             print(e)
         time.sleep(1)

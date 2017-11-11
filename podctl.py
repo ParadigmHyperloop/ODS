@@ -104,6 +104,8 @@ def loop(pod):
             user_write("\r" + make_prompt(pod))
             cached_state = pod.state
 
+    user_write("... Disconnected")
+
 
 def main():
     parser = argparse.ArgumentParser(description="Openloop Command Client",
