@@ -1,4 +1,4 @@
-# OpenLoop Data Shuttle [![Build Status](https://travis-ci.org/ParadigmHyperloop/ODS.svg?branch=master)](https://travis-ci.org/openloopalliance/ODS)
+# OpenLoop Data Shuttle [![Build Status](https://travis-ci.org/ParadigmHyperloop/ODS.svg?branch=dev%2Fcodewalk_2)](https://travis-ci.org/ParadigmHyperloop/ODS)
 
 _All the Telemetry_
 
