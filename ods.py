@@ -325,17 +325,18 @@ def main():
     if args.verbose:
         logging.basicConfig(level=logging.DEBUG)
 
-    if args.serial:
-        print("Starting raw serial reader on: %s" % args.serial)
-        raw = RawReader(filename=args.serial)
-        threading.Thread(target=raw.run_safe).start()
-
     # Create connection to influx database
     influx = InfluxDBClient(args.influx_host, args.influx_port,
                             args.influx_user, args.influx_pass,
                             args.influx_name)
 
-    influx.create_database(args.influx_name)
+    if {'name': args.influx_name} not in influx.get_list_database():
+        influx.create_database(args.influx_name)
+
+    if args.serial:
+        print("Starting raw serial reader on: %s" % args.serial)
+        raw = RawReader(filename=args.serial, influx=influx)
+        threading.Thread(target=raw.run_safe).start()
 
     spacex_addr = None
     # Setup the data handler, tell it about the spacex server
